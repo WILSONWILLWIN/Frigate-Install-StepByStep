@@ -1,0 +1,263 @@
+[Commands]
+
+(Use this command to update all your packages on your system and make sure your system is up to date)
+1. sudo apt update && sudo apt upgrade -y
+
+(If it does not open the file with this command it means it doesn't exist)
+2. cd /DATA/AppData
+
+(If the folder didn't exist when running command (2) run this to make it)
+3. mkdir -p Data/AppData/Frigate
+
+(This is the command to install docker first on your system This could take 5 to 20 minutes)
+4. curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+
+(Add docker to your user)
+5. sudo usermod -aG docker $USER
+
+(Just to check your docker version and make sure you're logged in)
+6. docker --version
+
+(It's always good to reboot your system after installing docker so that's what we're going to do)
+7. Reboot
+
+(Then you're going to need to enter your directory where you want to install Frigate The one below is the one I recommend it's easy to format)
+8. cd /DATA/AppData 
+
+(Then you're going to need to make a nano file to put the docker compose in and compile So first let's make the nano file)
+9. nano docker-compose.yml
+
+(Now that you have made the nano file please paste all of this in there and then at the bottom where it says your password change that to the password you would like to set up for Foregate and then also where it says ./storage:/media/frigate You could change that directory if you want to store your video footage somewhere else.)  
+10. 
+
+version: "3.9"
+services:
+  frigate:
+    container_name: frigate
+    privileged: true
+    restart: unless-stopped
+    image: ghcr.io/blakeblackshear/frigate:stable
+    shm_size: "64mb"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./config:/config
+      - ./storage:/media/frigate    
+      - type: tmpfs
+        target: /tmp/cache
+        tmpfs:
+          size: 1000000000
+    ports:
+      - "5000:5000"      # Web UI
+      - "8554:8554"      # RTSP feeds
+      - "8555:8555/tcp"  # WebRTC
+      - "8555:8555/udp"  # WebRTC
+    environment:
+      - FRIGATE_RTSP_PASSWORD=YourPassword 
+
+11. When you're done do Control plus X then do control plus Y and then do enter to save To exit the nano file.
+
+(Now that you're done run this command while in your folder where you have Frigate To start up the docker container on your system)
+12. docker compose up -d
+
+(Now run this command to be able to see if the container is up)
+13. docker ps
+
+(Now that your container is go to a browser of your choice on any computer connected to your local network and type in your server's IP and then do a colon 5000 or whatever port you set it as in the configuration It should be formatted similarly to what's below)
+14. http://100.100.100.100:5000
+
+15. (In your settings make sure that all your AI features are disabled in the second tab and make sure that alerts are also off.)
+
+16. (Now proceed to go to your settings and click Configuration once or twice sometimes it doesn't pop up the first time you click Configuration settings)
+
+17. (Now we're going to figure out how to get your cameras RTSP stream and format it)
+
+18. (In your app somewhere it should tell you your IP and your Port number so you can just import it into this example) rtsp://username:password@IPaddress:554/live/ch0
+(This is the code that I have made for the configuration and I go through it in the video)
+
+19. 
+
+mqtt:
+  host: mqtt.server.com
+
+cameras:
+  EVE:
+    ffmpeg:
+      inputs:
+        - path: rtsp://ZaaY0Wpi:PJrjy2YaQuuvhD8s@100.100.100.100:752/live/ch0
+          roles:
+            - detect
+            - record
+            - audio  # Enable audio stream capture for EVE
+    detect:
+      width: 1280
+      height: 720
+    motion:
+      threshold: 30
+      contour_area: 15
+      improve_contrast: true
+    record:
+      enabled: true
+      retain:
+        days: 7
+    audio:
+      enabled: true  # Enable audio for live view and recordings
+      
+  Grage:
+    ffmpeg:
+      inputs:
+        - path: rtsp://tyjqC5lp:WgVlchJxOzD9Cyrt@100.100.100.100.75:555/live/ch0
+          roles:
+            - detect
+            - record
+            - audio  # Enable audio stream capture for EVE
+    detect:
+      width: 1280
+      height: 720
+    motion:
+      threshold: 30
+      contour_area: 15
+      improve_contrast: true
+    record:
+      enabled: true
+      retain:
+        days: 7
+    audio:
+      enabled: true  # Enable audio for live view and recordings
+
+  Basement:
+    ffmpeg:
+      inputs:
+        - path: rtsp://MHa2c0:gGAOESGbrMdl@100.100.100.100:554/live/ch0
+          roles:
+            - detect
+            - record
+            - audio  # Enable audio stream capture for Basement
+    detect:
+      width: 1280
+      height: 720
+    motion:
+      threshold: 30
+      contour_area: 15
+      improve_contrast: true
+    record:
+      enabled: true
+      retain:
+        days: 7
+    audio:
+      enabled: true  # Enable audio for live view and recordings
+
+  Maindoor:
+    ffmpeg:
+      inputs:
+        - path: rtsp://nightclouds123:dayclouds67@100.100.100.100:554/stream1
+          roles:
+            - detect
+            - record
+            - audio  # Enable audio stream capture for Maindoor
+    detect:
+      width: 1280
+      height: 720
+    motion:
+      threshold: 30
+      contour_area: 15
+      improve_contrast: true
+    record:
+      enabled: true
+      retain:
+        days: 7
+    audio:
+      enabled: true  # Enable audio for live view and recordings
+
+  Frontdoor:
+    ffmpeg:
+      inputs:
+        - path: rtsp://Frontentrance:Frontdoor@100.100.100.100:659/live/ch0
+          roles:
+            - detect
+            - record
+            - audio  # Enable audio stream capture for Frontdoor
+    detect:
+      width: 1280
+      height: 720
+    motion:
+      threshold: 30
+      contour_area: 15
+      improve_contrast: true
+    record:
+      enabled: true
+      retain:
+        days: 7
+    audio:
+      enabled: true  # Enable audio for live view and recordings
+
+  Porch-cam1:
+    ffmpeg:
+      inputs:
+        - path: rtsp://duocover:duocover123%%@100.100.100.100/live/stream6
+          roles:
+            - detect
+            - record
+            - audio  # Enable audio stream capture for Frontdoor
+    detect:
+      width: 1280
+      height: 720
+    motion:
+      threshold: 30
+      contour_area: 15
+      improve_contrast: true
+    record:
+      enabled: true
+      retain:
+        days: 7
+    audio:
+      enabled: true  # Enable audio for live view and recordings
+
+  Porch-duo:
+    ffmpeg:
+      inputs:
+        - path: rtsp://duocover:duocover123%%@100.100.100.100/live/stream1
+          roles:
+            - detect
+            - record
+            - audio  # Enable audio stream capture for Frontdoor
+    detect:
+      width: 1280
+      height: 720
+    motion:
+      threshold: 30
+      contour_area: 15
+      improve_contrast: true
+    record:
+      enabled: true
+      retain:
+        days: 7
+    audio:
+      enabled: true  # Enable audio for live view and recordings
+
+version: 0.15-1
+
+semantic_search:
+  enabled: true
+  reindex: false
+  model_size: large
+
+objects:
+  track:
+    - person
+    - car
+    - dog
+    - cat
+    - bird
+    - bicycle
+    - truck
+
+camera_groups: {}
+
+20. (Now that you have configured your camera group and RTSP streams We now get to configure the settings and restart for gate so once you've made your configuration with the base code I've gave you just restart and save the config with the button in the top right)
+21. (Go through the settings enable the ones you want and don't want and frigate is up and ready to go for you Have a great day I'll also try and get better at making my documentations sorry if this one was kind of hard to read)
+
+
+
+
+
